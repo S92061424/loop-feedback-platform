@@ -2,6 +2,8 @@ import express from "express";
 import dotenv from "dotenv";
 import { connectDB } from "./config/db.js";
 import authRoutes from "./routes/authRoutes.js";
+import { requireAuth, type AuthRequest } from "./middleware/auth.middleware.js";
+import { requireRole } from "./middleware/role.middleware.js";
 
 dotenv.config();
 
