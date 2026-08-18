@@ -1,0 +1,57 @@
+import type { Response } from "express";
+import Feedback from "../models/Feedback.js";
+import type { AuthRequest } from "../middleware/auth.middleware.js";
+
+// CREATE — single feedback entry
+export const createFeedback = async (req: AuthRequest, res: Response) => {
+  try {
+    const { content, channel, sourceRef, customerLabel } = req.body;
+
+    if (!content || !channel) {
+      return res.status(400).json({ error: "Content and channel are required" });
+    }
+
+    const feedback = await Feedback.create({
+      workspaceId: req.user!.workspaceId,
+      content,
+      channel,
+      sourceRef,
+      customerLabel,
+      status: "NEW",
+    });
+
+    res.status(201).json(feedback);
+  } catch (error) {
+    console.error("Create feedback error:", error);
+    res.status(500).json({ error: "Failed to create feedback" });
+  }
+};
+
+// LIST — paginated, scoped to the caller's workspace only
+export const listFeedback = async (req: AuthRequest, res: Response) => {
+  try {
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 20;
+    const skip = (page - 1) * limit;
+
+    const filter: Record<string, any> = { workspaceId: req.user!.workspaceId };
+
+    // optional filters
+    if (req.query.channel) filter.channel = req.query.channel;
+    if (req.query.sentiment) filter.sentiment = req.query.sentiment;
+    if (req.query.status) filter.status = req.query.status;
+
+    const [items, total] = await Promise.all([
+      Feedback.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit),
+      Feedback.countDocuments(filter),
+    ]);
+
+    res.json({
+      items,
+      pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
+    });
+  } catch (error) {
+    console.error("List feedback error:", error);
+    res.status(500).json({ error: "Failed to fetch feedback" });
+  }
+};
