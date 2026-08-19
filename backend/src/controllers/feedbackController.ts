@@ -1,6 +1,7 @@
 import type { Response } from "express";
 import Feedback from "../models/Feedback.js";
 import type { AuthRequest } from "../middleware/auth.middleware.js";
+import { parseFeedbackCsv } from "../services/csvService.js";
 
 // CREATE — single feedback entry
 export const createFeedback = async (req: AuthRequest, res: Response) => {
@@ -36,7 +37,6 @@ export const listFeedback = async (req: AuthRequest, res: Response) => {
 
     const filter: Record<string, any> = { workspaceId: req.user!.workspaceId };
 
-    // optional filters
     if (req.query.channel) filter.channel = req.query.channel;
     if (req.query.sentiment) filter.sentiment = req.query.sentiment;
     if (req.query.status) filter.status = req.query.status;
@@ -53,5 +53,35 @@ export const listFeedback = async (req: AuthRequest, res: Response) => {
   } catch (error) {
     console.error("List feedback error:", error);
     res.status(500).json({ error: "Failed to fetch feedback" });
+  }
+};
+
+// BULK UPLOAD via CSV
+export const bulkUploadFeedback = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: "No CSV file uploaded" });
+    }
+
+    const { valid, errors } = parseFeedbackCsv(req.file.buffer);
+
+    const created = await Feedback.insertMany(
+      valid.map((row) => ({
+        workspaceId: req.user!.workspaceId,
+        content: row.content,
+        channel: row.channel,
+        customerLabel: row.customer_label,
+        status: "NEW",
+      }))
+    );
+
+    res.status(201).json({
+      importedCount: created.length,
+      failedCount: errors.length,
+      errors,
+    });
+  } catch (error) {
+    console.error("Bulk upload error:", error);
+    res.status(500).json({ error: "Failed to process CSV upload" });
   }
 };

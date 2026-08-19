@@ -11,11 +11,17 @@ const PORT = process.env.PORT || 5000;
 
 app.use(express.json());
 
+app.use((req, res, next) => {              // NEW
+  console.log(`Incoming request: ${req.method} ${req.path}`);  // NEW
+  next();                                   // NEW
+});                                          // NEW
+
 app.get("/", (req, res) => {
   res.send("LOOP backend is running!");
 });
 
 app.use("/api/auth", authRoutes);
+console.log("Mounting feedback routes...");  // NEW
 app.use("/api/feedback", feedbackRoutes);
 
 async function startServer() {

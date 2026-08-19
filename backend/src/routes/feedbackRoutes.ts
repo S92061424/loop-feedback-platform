@@ -1,12 +1,15 @@
 import { Router } from "express";
-import { createFeedback, listFeedback } from "../controllers/feedbackController.js";
+import multer from "multer";
+import { createFeedback, listFeedback, bulkUploadFeedback } from "../controllers/feedbackController.js";
 import { requireAuth } from "../middleware/auth.middleware.js";
 
 const router = Router();
+const upload = multer({ storage: multer.memoryStorage() });
 
-router.use(requireAuth); // every route below requires a valid token
+router.use(requireAuth);
 
 router.post("/", createFeedback);
 router.get("/", listFeedback);
+router.post("/bulk-upload", upload.single("file"), bulkUploadFeedback);
 
 export default router;
