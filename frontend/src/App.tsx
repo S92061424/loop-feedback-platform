@@ -3,12 +3,9 @@ import { AuthProvider } from "./context/AuthContext";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Dashboard from "./pages/Dashboard";
+import Inbox from "./pages/Inbox";
 import Layout from "./components/Layout";
 import ProtectedRoute from "./components/ProtectedRoute";
-
-function Inbox() {
-  return <h1>Inbox (coming soon)</h1>;
-}
 
 function App() {
   return (
