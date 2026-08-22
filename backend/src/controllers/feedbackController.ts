@@ -2,6 +2,7 @@ import type { Response } from "express";
 import Feedback from "../models/Feedback.js";
 import type { AuthRequest } from "../middleware/auth.middleware.js";
 import { parseFeedbackCsv } from "../services/csvService.js";
+import { classifyFeedback } from "../services/aiService.js";
 
 // CREATE — single feedback entry
 export const createFeedback = async (req: AuthRequest, res: Response) => {
@@ -21,6 +22,17 @@ export const createFeedback = async (req: AuthRequest, res: Response) => {
       status: "NEW",
     });
 
+    // Classify asynchronously, don't block the response
+    classifyFeedback(content)
+  .then(async (result) => {
+    console.log("Classification succeeded for", feedback._id, result);
+    feedback.sentiment = result.sentiment;
+    feedback.sentimentScore = result.sentimentScore;
+    await feedback.save();
+    console.log("Feedback saved with sentiment:", feedback.sentiment);
+  })
+  .catch((err) => console.error("Classification failed for feedback", feedback._id, err));
+  
     res.status(201).json(feedback);
   } catch (error) {
     console.error("Create feedback error:", error);
@@ -74,6 +86,17 @@ export const bulkUploadFeedback = async (req: AuthRequest, res: Response) => {
         status: "NEW",
       }))
     );
+
+    // Classify each imported item in the background
+    created.forEach((feedback) => {
+      classifyFeedback(feedback.content)
+        .then(async (result) => {
+          feedback.sentiment = result.sentiment;
+          feedback.sentimentScore = result.sentimentScore;
+          await feedback.save();
+        })
+        .catch((err) => console.error("Classification failed for feedback", feedback._id, err));
+    });
 
     res.status(201).json({
       importedCount: created.length,
