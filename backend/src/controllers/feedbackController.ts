@@ -1,8 +1,22 @@
 import type { Response } from "express";
 import Feedback from "../models/Feedback.js";
+import Theme from "../models/Theme.js";
 import type { AuthRequest } from "../middleware/auth.middleware.js";
 import { parseFeedbackCsv } from "../services/csvService.js";
 import { classifyFeedback } from "../services/aiService.js";
+
+// Helper: find or create themes by name, return their IDs
+async function resolveThemeIds(workspaceId: string, themeNames: string[]) {
+  const themeIds = [];
+  for (const themeName of themeNames) {
+    let theme = await Theme.findOne({ workspaceId, name: themeName });
+    if (!theme) {
+      theme = await Theme.create({ workspaceId, name: themeName });
+    }
+    themeIds.push(theme._id);
+  }
+  return themeIds;
+}
 
 // CREATE — single feedback entry
 export const createFeedback = async (req: AuthRequest, res: Response) => {
@@ -24,15 +38,16 @@ export const createFeedback = async (req: AuthRequest, res: Response) => {
 
     // Classify asynchronously, don't block the response
     classifyFeedback(content)
-  .then(async (result) => {
-    console.log("Classification succeeded for", feedback._id, result);
-    feedback.sentiment = result.sentiment;
-    feedback.sentimentScore = result.sentimentScore;
-    await feedback.save();
-    console.log("Feedback saved with sentiment:", feedback.sentiment);
-  })
-  .catch((err) => console.error("Classification failed for feedback", feedback._id, err));
-  
+      .then(async (result) => {
+        console.log("Classification succeeded for", feedback._id, result);
+        feedback.sentiment = result.sentiment;
+        feedback.sentimentScore = result.sentimentScore;
+        feedback.themeIds = await resolveThemeIds(req.user!.workspaceId, result.themes);
+        await feedback.save();
+        console.log("Feedback saved with sentiment:", feedback.sentiment);
+      })
+      .catch((err) => console.error("Classification failed for feedback", feedback._id, err));
+
     res.status(201).json(feedback);
   } catch (error) {
     console.error("Create feedback error:", error);
@@ -93,6 +108,7 @@ export const bulkUploadFeedback = async (req: AuthRequest, res: Response) => {
         .then(async (result) => {
           feedback.sentiment = result.sentiment;
           feedback.sentimentScore = result.sentimentScore;
+          feedback.themeIds = await resolveThemeIds(req.user!.workspaceId, result.themes);
           await feedback.save();
         })
         .catch((err) => console.error("Classification failed for feedback", feedback._id, err));
