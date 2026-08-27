@@ -3,7 +3,7 @@ import Feedback from "../models/Feedback.js";
 import Theme from "../models/Theme.js";
 import type { AuthRequest } from "../middleware/auth.middleware.js";
 import { parseFeedbackCsv } from "../services/csvService.js";
-import { classifyFeedback } from "../services/aiService.js";
+import { classifyFeedback, embedText } from "../services/aiService.js";
 
 // Helper: find or create themes by name, return their IDs
 async function resolveThemeIds(workspaceId: string, themeNames: string[]) {
@@ -43,6 +43,7 @@ export const createFeedback = async (req: AuthRequest, res: Response) => {
         feedback.sentiment = result.sentiment;
         feedback.sentimentScore = result.sentimentScore;
         feedback.themeIds = await resolveThemeIds(req.user!.workspaceId, result.themes);
+        feedback.embedding = await embedText(content);
         await feedback.save();
         console.log("Feedback saved with sentiment:", feedback.sentiment);
       })
@@ -109,6 +110,7 @@ export const bulkUploadFeedback = async (req: AuthRequest, res: Response) => {
           feedback.sentiment = result.sentiment;
           feedback.sentimentScore = result.sentimentScore;
           feedback.themeIds = await resolveThemeIds(req.user!.workspaceId, result.themes);
+          feedback.embedding = await embedText(feedback.content);
           await feedback.save();
         })
         .catch((err) => console.error("Classification failed for feedback", feedback._id, err));

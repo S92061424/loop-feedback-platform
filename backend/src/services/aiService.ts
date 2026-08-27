@@ -45,3 +45,50 @@ Return JSON in exactly this shape:
     throw new Error("AI classification returned invalid JSON");
   }
 };
+
+export const embedText = async (text: string): Promise<number[]> => {
+  const apiKey = process.env.GOOGLE_API_KEY as string;
+  const genAI = new GoogleGenerativeAI(apiKey);
+  const model = genAI.getGenerativeModel({ model: "gemini-embedding-001" });
+
+  const result = await model.embedContent(text);
+  return result.embedding.values;
+};
+
+export const cosineSimilarity = (a: number[], b: number[]): number => {
+  let dot = 0, normA = 0, normB = 0;
+  for (let i = 0; i < a.length; i++) {
+    const ai = a[i] ?? 0;
+    const bi = b[i] ?? 0;
+    dot += ai * bi;
+    normA += ai * ai;
+    normB += bi * bi;
+  }
+  return dot / (Math.sqrt(normA) * Math.sqrt(normB));
+};
+
+export const answerQuestion = async (
+  question: string,
+  contextItems: { content: string; sentiment?: string | undefined; channel: string }[]
+): Promise<string> => {
+
+  const apiKey = process.env.GOOGLE_API_KEY as string;
+  const genAI = new GoogleGenerativeAI(apiKey);
+  const model = genAI.getGenerativeModel({ model: "gemini-3.6-flash" });
+
+  const contextText = contextItems
+    .map((item, i) => `[${i + 1}] (${item.channel}, sentiment: ${item.sentiment || "unknown"}) ${item.content}`)
+    .join("\n");
+
+  const prompt = `You are answering questions about customer feedback for a product team. Answer ONLY using the feedback provided below. If the feedback doesn't contain enough information to answer, say so clearly. Do not invent or assume anything not present in the feedback.
+
+Feedback data:
+${contextText}
+
+Question: ${question}
+
+Give a concise, direct answer grounded only in the feedback above. Reference item numbers like [1], [2] where relevant.`;
+
+  const result = await model.generateContent(prompt);
+  return result.response.text().trim();
+};
