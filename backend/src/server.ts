@@ -7,6 +7,7 @@ import feedbackRoutes from "./routes/feedbackRoutes.js";
 import themeRoutes from "./routes/themeRoutes.js";
 import askRoutes from "./routes/askRoutes.js";
 import reportRoutes from "./routes/reportRoutes.js";
+import dashboardRoutes from "./routes/dashboardRoutes.js";
 
 process.on("unhandledRejection", (reason) => {
   console.error("UNHANDLED REJECTION:", reason);
@@ -42,6 +43,7 @@ app.use("/api/feedback", feedbackRoutes);
 app.use("/api/themes", themeRoutes);
 app.use("/api/ask", askRoutes);
 app.use("/api/reports", reportRoutes);
+app.use("/api/dashboard", dashboardRoutes);
 
 async function startServer() {
   await connectDB();
