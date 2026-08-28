@@ -92,3 +92,31 @@ Give a concise, direct answer grounded only in the feedback above. Reference ite
   const result = await model.generateContent(prompt);
   return result.response.text().trim();
 };
+export const generateReportNarrative = async (stats: {
+  totalFeedback: number;
+  sentimentBreakdown: { POS: number; NEU: number; NEG: number };
+  topThemes: { name: string; count: number }[];
+  sampleQuotes: string[];
+}): Promise<string> => {
+  const apiKey = process.env.GOOGLE_API_KEY as string;
+  const genAI = new GoogleGenerativeAI(apiKey);
+  const model = genAI.getGenerativeModel({ model: "gemini-3.6-flash" });
+
+  const prompt = `You are writing a Voice-of-Customer report for a product team's leadership. Use ONLY the data below — do not invent numbers or facts.
+
+Total feedback this period: ${stats.totalFeedback}
+Sentiment breakdown: ${stats.sentimentBreakdown.POS} positive, ${stats.sentimentBreakdown.NEU} neutral, ${stats.sentimentBreakdown.NEG} negative
+Top themes: ${stats.topThemes.map((t) => `${t.name} (${t.count} mentions)`).join(", ")}
+Sample verbatim quotes: ${stats.sampleQuotes.map((q) => `"${q}"`).join(" | ")}
+
+Write a short professional report (3-4 short paragraphs) covering:
+1. Overall sentiment summary
+2. Top themes and what they suggest
+3. 1-2 notable verbatim quotes
+4. Recommended actions for the product team
+
+Keep it concise and business-appropriate.`;
+
+  const result = await model.generateContent(prompt);
+  return result.response.text().trim();
+};
