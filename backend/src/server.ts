@@ -25,7 +25,7 @@ const PORT = process.env.PORT || 5000;
 app.use(cors({
   origin: [
     "http://localhost:5173",
-    "https://loop-feedback-platform-xxxx.vercel.app", // ← paste your actual Vercel URL here
+    "https://loop-feedback-platform-git-main-sidhu11.vercel.app",
   ],
   credentials: true,
 }));
