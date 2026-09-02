@@ -101,10 +101,6 @@ Three-tier architecture: React frontend → Express API layer → MongoDB + Goog
 
 ## Team
 
-- Person A — Backend, auth, AI integration
-- Person B — Frontend, dashboard, inbox UI
-- (add other team members and their roles here)
-
-## Screenshots
-
-*(Add screenshots of: login page, dashboard, inbox, Ask LOOP, VoC report)*
+- K.Pushpakanthan — Backend, auth, AI integration
+- Bhavneesh Sharma — Frontend, dashboard, inbox UI
+- ChandraLakshmiprasanna — Frontend, dashboard, Testing
