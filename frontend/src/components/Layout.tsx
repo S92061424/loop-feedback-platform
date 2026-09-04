@@ -17,6 +17,9 @@ export default function Layout() {
         <nav style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           <Link to="/dashboard" style={{ color: "white" }}>Dashboard</Link>
           <Link to="/inbox" style={{ color: "white" }}>Inbox</Link>
+          <Link to="/ask" style={{ color: "white" }}>Ask LOOP</Link>
+          <Link to="/themes" style={{ color: "white" }}>Themes</Link>
+          <Link to="/reports" style={{ color: "white" }}>Reports</Link>
         </nav>
       </aside>
       <main style={{ flex: 1, padding: 30 }}>

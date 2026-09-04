@@ -6,6 +6,9 @@ import Dashboard from "./pages/Dashboard";
 import Inbox from "./pages/Inbox";
 import Layout from "./components/Layout";
 import ProtectedRoute from "./components/ProtectedRoute";
+import AskLoop from "./pages/AskLoop";
+import Themes from "./pages/Themes";
+import Reports from "./pages/Reports";
 
 function App() {
   return (
@@ -23,6 +26,9 @@ function App() {
           >
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/inbox" element={<Inbox />} />
+            <Route path="/ask" element={<AskLoop />} />
+            <Route path="/themes" element={<Themes />} />
+            <Route path="/reports" element={<Reports />} />
           </Route>
           <Route path="/" element={<Navigate to="/login" />} />
         </Routes>
